@@ -1,0 +1,807 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>RallyChat</title>
+  <!-- Tailwind CSS CDN -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <!-- FontAwesome Icons -->
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  <!-- Inter Font -->
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          colors: {
+            rally: {
+              yellow: '#FFCC00',
+              yellowHover: '#E6B800',
+              bgDark: '#111214',
+              panelDark: '#1E1F22',
+              cardDark: '#2B2D31',
+              pillDark: '#383A40',
+              textMuted: '#949BA4',
+              accentGreen: '#23A55A',
+            }
+          },
+          fontFamily: {
+            sans: ['Inter', 'sans-serif'],
+          }
+        }
+      }
+    }
+  </script>
+
+  <style>
+    /* Custom Scrollbar Styling */
+    ::-webkit-scrollbar {
+      width: 6px;
+      height: 6px;
+    }
+    ::-webkit-scrollbar-track {
+      background: transparent;
+    }
+    ::-webkit-scrollbar-thumb {
+      background: #2b2d31;
+      border-radius: 9999px;
+    }
+    ::-webkit-scrollbar-thumb:hover {
+      background: #383a40;
+    }
+
+    /* Speaking Pulse Ring Animation */
+    .speaking-ring {
+      box-shadow: 0 0 0 4px #23a55a, 0 0 15px rgba(35, 165, 90, 0.6);
+      animation: pulse-ring 1.5s infinite ease-in-out;
+    }
+
+    @keyframes pulse-ring {
+      0% { box-shadow: 0 0 0 2px #23a55a, 0 0 5px rgba(35, 165, 90, 0.4); }
+      50% { box-shadow: 0 0 0 5px #23a55a, 0 0 18px rgba(35, 165, 90, 0.8); }
+      100% { box-shadow: 0 0 0 2px #23a55a, 0 0 5px rgba(35, 165, 90, 0.4); }
+    }
+
+    .modal-backdrop {
+      background-color: rgba(0, 0, 0, 0.75);
+      backdrop-filter: blur(4px);
+    }
+  </style>
+</head>
+<body class="bg-rally-bgDark text-white h-screen w-screen overflow-hidden flex select-none font-sans">
+
+  <!-- ========================================== -->
+  <!-- 1. LEFTMOST YELLOW BRANDING & SERVER BAR   -->
+  <!-- ========================================== -->
+  <aside class="w-20 md:w-24 bg-rally-yellow flex flex-col items-center py-4 space-y-4 z-20 shrink-0 shadow-2xl">
+    
+    <!-- Logo Button (Sports Car with Cat Driver) -->
+    <button id="logo-home-btn" title="RallyChat Home" class="relative group">
+      <div class="w-14 h-14 bg-rally-bgDark rounded-2xl flex items-center justify-center p-2 shadow-lg transition-all duration-300 transform group-hover:scale-105 group-hover:rounded-xl">
+        <svg viewBox="0 0 100 100" class="w-full h-full fill-current text-rally-yellow">
+          <!-- Car outline -->
+          <path d="M10,65 C15,65 20,60 25,50 L35,38 C42,32 55,30 75,38 L88,48 C94,52 98,58 98,65 L98,68 C98,71 95,73 92,73 L88,73 C86,63 76,57 66,57 C56,57 47,64 45,73 L33,73 C31,63 21,57 11,57 C8,57 5,59 3,62 L2,65 C2,68 5,73 10,73 Z" />
+          <!-- Cat silhouette -->
+          <path d="M48,40 C48,34 52,28 58,28 C60,24 64,22 66,28 C70,28 73,32 72,38 C70,45 62,48 55,47 Z" />
+          <polygon points="56,26 60,18 63,25" />
+          <polygon points="63,25 67,19 70,27" />
+          <!-- Wheels -->
+          <circle cx="21" cy="71" r="10" class="fill-current text-white" />
+          <circle cx="21" cy="71" r="5" class="fill-current text-rally-bgDark" />
+          <circle cx="76" cy="71" r="10" class="fill-current text-white" />
+          <circle cx="76" cy="71" r="5" class="fill-current text-rally-bgDark" />
+          <!-- Motion lines -->
+          <path d="M2,45 L15,45 M5,38 L22,38 M1,52 L12,52" stroke="currentColor" stroke-width="3" stroke-linecap="round"/>
+        </svg>
+      </div>
+      <span class="absolute left-full ml-3 top-2 px-3 py-1 bg-rally-panelDark text-white text-xs font-bold rounded-md shadow-xl opacity-0 group-hover:opacity-100 transition-opacity duration-200 pointer-events-none whitespace-nowrap z-50">
+        RallyChat
+      </span>
+    </button>
+
+    <div class="w-10 h-1 bg-rally-bgDark/20 rounded-full"></div>
+
+    <!-- Servers List -->
+    <div class="flex-1 w-full flex flex-col items-center space-y-3 overflow-y-auto no-scrollbar px-2">
+      <!-- Active Server -->
+      <button class="server-btn relative group w-12 h-12 rounded-2xl bg-rally-bgDark text-rally-yellow font-bold flex items-center justify-center transition-all duration-200 hover:rounded-xl shadow-md ring-2 ring-rally-bgDark">
+        <span class="text-sm">RC</span>
+        <span class="absolute -left-2 top-3 w-1.5 h-6 bg-rally-bgDark rounded-r-full"></span>
+        <span class="absolute left-full ml-3 top-2 px-3 py-1 bg-rally-panelDark text-white text-xs font-semibold rounded-md shadow-xl opacity-0 group-hover:opacity-100 transition-opacity duration-200 pointer-events-none whitespace-nowrap z-50">
+          RallyChat
+        </span>
+      </button>
+
+      <!-- Additional Server -->
+      <button class="server-btn relative group w-12 h-12 rounded-3xl bg-rally-bgDark/20 text-rally-bgDark font-bold flex items-center justify-center transition-all duration-200 hover:bg-rally-bgDark hover:text-rally-yellow hover:rounded-xl">
+        <i class="fa-solid fa-gamepad text-lg"></i>
+        <span class="absolute left-full ml-3 top-2 px-3 py-1 bg-rally-panelDark text-white text-xs font-semibold rounded-md shadow-xl opacity-0 group-hover:opacity-100 transition-opacity duration-200 pointer-events-none whitespace-nowrap z-50">
+          Gaming Hub
+        </span>
+      </button>
+
+      <!-- Create Server -->
+      <button onclick="openAlertModal('Create Server', 'Server creation modal')" class="w-12 h-12 rounded-3xl bg-rally-bgDark/15 text-rally-bgDark flex items-center justify-center transition-all duration-200 hover:bg-rally-bgDark hover:text-rally-yellow hover:rounded-xl">
+        <i class="fa-solid fa-plus text-lg"></i>
+      </button>
+    </div>
+  </aside>
+
+  <!-- ========================================== -->
+  <!-- 2. SECONDARY NAVIGATION PANEL (CHANNELS)  -->
+  <!-- ========================================== -->
+  <nav class="w-60 md:w-64 bg-rally-panelDark flex flex-col shrink-0 border-r border-white/5">
+    
+    <!-- Server Title Header -->
+    <div class="h-14 px-4 border-b border-white/5 flex items-center justify-between shadow-sm">
+      <h1 class="font-bold text-base truncate tracking-tight">RallyChat</h1>
+      <button class="text-rally-textMuted hover:text-white transition">
+        <i class="fa-solid fa-chevron-down text-sm"></i>
+      </button>
+    </div>
+
+    <!-- Channels Container -->
+    <div class="flex-1 overflow-y-auto p-3 space-y-6">
+      
+      <!-- Text Channels -->
+      <div>
+        <div class="px-2 mb-2 flex items-center justify-between text-xs font-bold text-rally-textMuted uppercase tracking-wider">
+          <span>Text Channels</span>
+          <i class="fa-solid fa-plus text-xs cursor-pointer hover:text-white"></i>
+        </div>
+
+        <div class="bg-rally-cardDark/50 rounded-2xl p-1.5 space-y-1 border border-white/5 shadow-inner">
+          <button data-channel-type="text" data-channel-name="general" class="channel-btn active w-full flex items-center px-3 py-2 rounded-xl text-sm font-medium transition-all duration-150 text-white bg-white/10 shadow-sm">
+            <span class="text-rally-textMuted text-lg mr-2 font-normal">#</span>
+            <span class="truncate">general</span>
+          </button>
+
+          <button data-channel-type="text" data-channel-name="spam" class="channel-btn w-full flex items-center px-3 py-2 rounded-xl text-sm font-medium text-rally-textMuted hover:text-white hover:bg-white/5 transition-all duration-150">
+            <span class="text-rally-textMuted text-lg mr-2 font-normal">#</span>
+            <span class="truncate">spam</span>
+          </button>
+
+          <button data-channel-type="text" data-channel-name="gaming" class="channel-btn w-full flex items-center px-3 py-2 rounded-xl text-sm font-medium text-rally-textMuted hover:text-white hover:bg-white/5 transition-all duration-150">
+            <span class="text-rally-textMuted text-lg mr-2 font-normal">#</span>
+            <span class="truncate">gaming</span>
+          </button>
+        </div>
+      </div>
+
+      <!-- Voice Channels -->
+      <div>
+        <div class="px-2 mb-2 flex items-center justify-between text-xs font-bold text-rally-textMuted uppercase tracking-wider">
+          <span>Voice Channels</span>
+          <i class="fa-solid fa-plus text-xs cursor-pointer hover:text-white"></i>
+        </div>
+
+        <div class="bg-rally-cardDark/50 rounded-2xl p-1.5 space-y-1 border border-white/5 shadow-inner">
+          <button data-channel-type="voice" data-channel-name="voice" class="channel-btn w-full flex items-center px-3 py-2.5 rounded-xl text-sm font-medium text-rally-textMuted hover:text-white hover:bg-white/5 transition-all duration-150 group">
+            <i class="fa-solid fa-volume-high text-rally-yellow mr-2.5 text-xs group-hover:scale-110 transition-transform"></i>
+            <span class="truncate text-xs font-semibold text-gray-200">voice</span>
+          </button>
+        </div>
+      </div>
+
+    </div>
+
+    <!-- Active Voice Bar -->
+    <div id="voice-connected-bar" class="hidden bg-rally-cardDark border-t border-white/5 p-3 flex items-center justify-between">
+      <div class="flex items-center space-x-2.5 overflow-hidden">
+        <div class="w-2.5 h-2.5 rounded-full bg-rally-accentGreen animate-pulse"></div>
+        <div class="truncate">
+          <p class="text-xs font-bold text-rally-accentGreen">Voice Connected</p>
+          <p class="text-[10px] text-rally-textMuted truncate">voice</p>
+        </div>
+      </div>
+      <button id="disconnect-voice-btn" onclick="leaveVoiceChannel()" title="Disconnect" class="text-red-400 hover:text-red-300 p-1.5 rounded-lg hover:bg-white/5">
+        <i class="fa-solid fa-phone-slash text-sm"></i>
+      </button>
+    </div>
+
+  </nav>
+
+  <!-- ========================================== -->
+  <!-- 3. MAIN AREA & TOP RIGHT PROFILE HEADER    -->
+  <!-- ========================================== -->
+  <main class="flex-1 flex flex-col min-w-0 bg-rally-bgDark relative">
+
+    <!-- Header Bar -->
+    <header class="h-14 border-b border-white/5 px-6 flex items-center justify-between shrink-0 bg-rally-bgDark/80 backdrop-blur z-10">
+      
+      <!-- Current Channel Header -->
+      <div class="flex items-center space-x-3">
+        <span id="current-channel-icon" class="text-rally-textMuted text-xl font-normal">#</span>
+        <h2 id="current-channel-title" class="font-bold text-lg tracking-tight">general</h2>
+      </div>
+
+      <!-- TOP RIGHT PROFILE BADGE (Blueprint Requirement) -->
+      <div class="relative group">
+        <div class="flex items-center space-x-3 bg-rally-panelDark hover:bg-rally-cardDark px-3.5 py-1.5 rounded-full border border-white/10 cursor-pointer transition shadow-md">
+          
+          <!-- Avatar Icon -->
+          <div class="relative w-8 h-8 rounded-full bg-white flex items-center justify-center text-rally-bgDark overflow-hidden shrink-0 border border-rally-yellow">
+            <img id="user-avatar-img" src="data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='%23121214'><path d='M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm0 3c1.66 0 3 1.34 3 3s-1.34 3-3 3-3-1.34-3-3 1.34-3 3-3zm0 14.2c-2.5 0-4.71-1.28-6-3.22.03-1.99 4-3.08 6-3.08 1.99 0 5.97 1.09 6 3.08-1.29 1.94-3.5 3.22-6 3.22z'/></svg>" class="w-full h-full object-cover" alt="User Avatar">
+          </div>
+
+          <!-- Name & Online Indicator -->
+          <div class="flex flex-col text-left">
+            <span id="user-display-name" class="text-xs font-bold text-white tracking-wide">Your Name</span>
+            <div class="flex items-center space-x-1">
+              <span id="status-dot" class="w-2 h-2 rounded-full bg-rally-accentGreen"></span>
+              <span id="status-text" class="text-[10px] text-rally-textMuted capitalize font-medium">Online</span>
+            </div>
+          </div>
+
+          <i class="fa-solid fa-chevron-down text-[10px] text-rally-textMuted pl-1"></i>
+        </div>
+
+        <!-- Dropdown Menu -->
+        <div class="absolute right-0 top-full mt-2 w-56 bg-rally-panelDark border border-white/10 rounded-2xl shadow-2xl p-2 hidden group-hover:block z-50">
+          <button onclick="openProfileModal()" class="w-full text-left px-3 py-2 text-xs hover:bg-white/5 rounded-xl transition flex items-center space-x-2">
+            <i class="fa-solid fa-pen text-rally-yellow"></i>
+            <span>Edit Profile</span>
+          </button>
+          <button onclick="toggleUserStatus()" class="w-full text-left px-3 py-2 text-xs hover:bg-white/5 rounded-xl transition flex items-center space-x-2">
+            <i class="fa-solid fa-circle-half-stroke text-rally-accentGreen"></i>
+            <span>Toggle Status</span>
+          </button>
+        </div>
+      </div>
+
+    </header>
+
+    <!-- ========================================== -->
+    <!-- VIEW A: TEXT MESSAGES VIEW                 -->
+    <!-- ========================================== -->
+    <div id="view-text-chat" class="flex-1 flex flex-col justify-between overflow-hidden relative">
+      
+      <!-- Messages Container -->
+      <div id="messages-container" class="flex-1 overflow-y-auto p-6 space-y-6">
+        <div class="space-y-2 mb-6 border-b border-white/5 pb-4">
+          <div class="w-14 h-14 rounded-2xl bg-rally-yellow/10 border border-rally-yellow/30 flex items-center justify-center text-rally-yellow text-2xl font-extrabold">
+            #
+          </div>
+          <h2 class="text-2xl font-bold">Welcome to #<span class="channel-title-text">general</span>!</h2>
+          <p class="text-xs text-rally-textMuted">This is the start of the #<span class="channel-title-text">general</span> channel.</p>
+        </div>
+
+        <!-- Live Messages append here -->
+        <div id="dynamic-messages-list" class="space-y-4"></div>
+      </div>
+
+      <!-- Message Input Pill Box (Blueprint Requirement) -->
+      <div class="p-4 bg-rally-bgDark">
+        <form id="chat-form" class="relative">
+          <div class="bg-rally-pillDark/90 border border-white/10 rounded-3xl flex items-center px-4 py-3 shadow-lg focus-within:ring-2 focus-within:ring-rally-yellow transition-all">
+            
+            <button type="button" onclick="triggerFileUpload()" class="text-rally-textMuted hover:text-rally-yellow transition p-1 mr-2" title="Attach file">
+              <i class="fa-solid fa-circle-plus text-xl"></i>
+            </button>
+            <input type="file" id="file-attachment-input" class="hidden" accept="image/*">
+
+            <input id="message-text-input" type="text" autocomplete="off" placeholder="Type a message..." class="bg-transparent border-none outline-none text-white placeholder-rally-textMuted flex-1 text-base px-2">
+
+            <!-- Emoji Button -->
+            <div class="relative">
+              <button type="button" id="emoji-picker-btn" class="w-9 h-9 rounded-full hover:bg-white/10 flex items-center justify-center text-rally-textMuted hover:text-rally-yellow transition">
+                <i class="fa-regular fa-face-smile text-2xl"></i>
+              </button>
+
+              <!-- Comprehensive Emoji Picker Modal/Popover -->
+              <div id="emoji-popover" class="hidden absolute right-0 bottom-12 w-80 md:w-96 bg-rally-panelDark border border-white/10 rounded-3xl shadow-2xl p-4 z-50">
+                
+                <!-- Emoji Search Bar -->
+                <div class="mb-3">
+                  <input type="text" id="emoji-search-input" placeholder="Search emojis..." class="w-full bg-rally-bgDark border border-white/10 rounded-xl px-3 py-1.5 text-xs text-white focus:outline-none focus:border-rally-yellow">
+                </div>
+
+                <!-- Category Tabs -->
+                <div class="flex space-x-2 border-b border-white/10 pb-2 mb-3 overflow-x-auto text-xs no-scrollbar">
+                  <button type="button" onclick="filterEmojiCategory('smileys')" class="px-2 py-1 bg-white/10 rounded-lg text-rally-yellow hover:bg-white/20">😀 Smileys</button>
+                  <button type="button" onclick="filterEmojiCategory('animals')" class="px-2 py-1 bg-white/5 rounded-lg hover:bg-white/20">🐱 Animals</button>
+                  <button type="button" onclick="filterEmojiCategory('food')" class="px-2 py-1 bg-white/5 rounded-lg hover:bg-white/20">🍕 Food</button>
+                  <button type="button" onclick="filterEmojiCategory('objects')" class="px-2 py-1 bg-white/5 rounded-lg hover:bg-white/20">🚗 Objects</button>
+                  <button type="button" onclick="filterEmojiCategory('symbols')" class="px-2 py-1 bg-white/5 rounded-lg hover:bg-white/20">⚡ Symbols</button>
+                </div>
+
+                <!-- Emoji Grid -->
+                <div id="emoji-grid" class="grid grid-cols-7 gap-1 max-h-48 overflow-y-auto p-1 text-xl">
+                  <!-- Dynamically populated -->
+                </div>
+
+                <!-- Custom Upload Area -->
+                <div class="pt-3 mt-2 border-t border-white/10 flex items-center justify-between">
+                  <button type="button" onclick="openEmojiUploadModal()" class="w-full py-2 bg-rally-cardDark hover:bg-rally-pillDark border border-dashed border-rally-yellow/40 rounded-xl text-xs text-rally-yellow font-semibold flex items-center justify-center space-x-2 transition">
+                    <i class="fa-solid fa-cloud-arrow-up"></i>
+                    <span>Upload Custom Emoji / GIF</span>
+                  </button>
+                </div>
+
+              </div>
+            </div>
+
+            <!-- Send Button -->
+            <button type="submit" class="ml-2 bg-rally-yellow hover:bg-rally-yellowHover text-rally-bgDark w-9 h-9 rounded-full flex items-center justify-center transition shadow">
+              <i class="fa-solid fa-paper-plane text-sm"></i>
+            </button>
+
+          </div>
+        </form>
+      </div>
+
+    </div>
+
+    <!-- ========================================== -->
+    <!-- VIEW B: VOICE ROOM VIEW (Blueprint 2)      -->
+    <!-- ========================================== -->
+    <div id="view-voice-chat" class="hidden flex-1 flex-col justify-between p-6 overflow-y-auto relative bg-rally-bgDark">
+      
+      <!-- Big Voice Header -->
+      <div class="text-center py-6">
+        <h1 class="text-5xl md:text-6xl font-extrabold tracking-tight text-white mb-2">Voice</h1>
+      </div>
+
+      <!-- Connected User Avatar Cards (Blueprint 2 Layout) -->
+      <div class="flex-1 flex items-center justify-center my-6">
+        <div id="voice-participants-grid" class="grid grid-cols-1 sm:grid-cols-2 gap-8 max-w-2xl w-full">
+          
+          <!-- User 1 Card -->
+          <div id="user-voice-card" class="bg-rally-cardDark/80 border border-white/10 rounded-3xl p-8 flex flex-col items-center justify-center space-y-4 shadow-2xl relative transition duration-300">
+            <div id="user-voice-avatar-ring" class="relative w-28 h-28 rounded-full bg-white flex items-center justify-center overflow-hidden border-4 border-rally-accentGreen speaking-ring">
+              <img id="user-voice-avatar-img" src="data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='%23121214'><path d='M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm0 3c1.66 0 3 1.34 3 3s-1.34 3-3 3-3-1.34-3-3 1.34-3 3-3zm0 14.2c-2.5 0-4.71-1.28-6-3.22.03-1.99 4-3.08 6-3.08 1.99 0 5.97 1.09 6 3.08-1.29 1.94-3.5 3.22-6 3.22z'/></svg>" class="w-full h-full object-cover">
+            </div>
+            <div class="text-center">
+              <p id="user-voice-name" class="font-bold text-lg text-white">Your Name</p>
+              <span id="speaking-indicator" class="text-xs text-rally-accentGreen font-semibold">Connected</span>
+            </div>
+          </div>
+
+        </div>
+      </div>
+
+      <!-- Screen Share Video Viewport -->
+      <div id="screen-share-preview" class="hidden my-4 bg-black border-2 border-rally-yellow/60 rounded-3xl p-2 relative overflow-hidden flex flex-col items-center justify-center min-h-[250px]">
+        <div class="absolute top-4 right-4 z-10 flex items-center space-x-2">
+          <span class="bg-red-600 text-white text-[10px] font-extrabold px-2 py-0.5 rounded-full animate-pulse">LIVE SCREEN</span>
+          <button onclick="stopScreenShare()" class="bg-rally-cardDark text-white p-1.5 rounded-full hover:bg-white/20"><i class="fa-solid fa-xmark"></i></button>
+        </div>
+        
+        <video id="screen-share-video" autoplay playsinline class="w-full max-h-[400px] rounded-2xl object-contain hidden"></video>
+        
+        <div id="screen-share-placeholder" class="py-12 flex flex-col items-center justify-center space-y-2">
+          <i class="fa-solid fa-desktop text-5xl text-rally-yellow animate-pulse"></i>
+          <p class="font-bold text-lg">Broadcasting Your Screen</p>
+        </div>
+      </div>
+
+      <!-- CENTER PILL BUTTON (Blueprint 2: "Broadcast your screen") -->
+      <div class="flex flex-col items-center space-y-4 pb-6">
+        
+        <button id="broadcast-screen-btn" onclick="startScreenShare()" class="bg-gray-300 hover:bg-white text-rally-bgDark font-bold px-10 py-4 rounded-full shadow-2xl text-lg md:text-xl transition-all transform hover:scale-105 active:scale-95 flex items-center space-x-3">
+          <i class="fa-solid fa-display text-rally-bgDark"></i>
+          <span>Broadcast your screen</span>
+        </button>
+
+        <!-- Voice Call Mute/Deafen Controls -->
+        <div class="flex items-center space-x-4 bg-rally-panelDark border border-white/10 px-6 py-2.5 rounded-full shadow-xl">
+          <button id="toggle-mic-btn" onclick="toggleMute()" class="w-11 h-11 rounded-full bg-white/10 hover:bg-white/20 text-white flex items-center justify-center transition" title="Toggle Mic">
+            <i id="mic-icon" class="fa-solid fa-microphone"></i>
+          </button>
+          
+          <button id="toggle-deafen-btn" onclick="toggleDeafen()" class="w-11 h-11 rounded-full bg-white/10 hover:bg-white/20 text-white flex items-center justify-center transition" title="Deafen">
+            <i id="deafen-icon" class="fa-solid fa-headphones"></i>
+          </button>
+
+          <button onclick="leaveVoiceChannel()" class="w-11 h-11 rounded-full bg-red-600 hover:bg-red-700 text-white flex items-center justify-center transition shadow" title="Disconnect">
+            <i class="fa-solid fa-phone-slash"></i>
+          </button>
+        </div>
+
+      </div>
+
+    </div>
+
+  </main>
+
+  <!-- ========================================== -->
+  <!-- MODALS                                     -->
+  <!-- ========================================== -->
+
+  <!-- Edit Profile Modal -->
+  <div id="edit-profile-modal" class="hidden fixed inset-0 z-50 modal-backdrop flex items-center justify-center p-4">
+    <div class="bg-rally-panelDark border border-white/10 rounded-3xl max-w-md w-full p-6 shadow-2xl space-y-4">
+      <div class="flex items-center justify-between border-b border-white/10 pb-3">
+        <h3 class="font-bold text-lg text-rally-yellow">Edit Profile</h3>
+        <button onclick="closeProfileModal()" class="text-rally-textMuted hover:text-white"><i class="fa-solid fa-xmark text-lg"></i></button>
+      </div>
+
+      <div class="space-y-4">
+        <div>
+          <label class="block text-xs font-bold text-rally-textMuted uppercase mb-1">Display Name</label>
+          <input type="text" id="edit-name-input" value="Your Name" class="w-full bg-rally-bgDark border border-white/10 rounded-xl px-4 py-2 text-sm text-white focus:outline-none focus:border-rally-yellow">
+        </div>
+
+        <div>
+          <label class="block text-xs font-bold text-rally-textMuted uppercase mb-1">Avatar File</label>
+          <input type="file" id="edit-avatar-file" class="text-xs text-rally-textMuted w-full" accept="image/*">
+        </div>
+      </div>
+
+      <div class="flex justify-end space-x-3 pt-2">
+        <button onclick="closeProfileModal()" class="px-4 py-2 text-xs font-semibold text-rally-textMuted hover:text-white">Cancel</button>
+        <button onclick="saveProfileChanges()" class="px-5 py-2 text-xs font-bold bg-rally-yellow text-rally-bgDark rounded-xl hover:bg-rally-yellowHover shadow">Save</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Custom Emoji Upload Modal -->
+  <div id="upload-emoji-modal" class="hidden fixed inset-0 z-50 modal-backdrop flex items-center justify-center p-4">
+    <div class="bg-rally-panelDark border border-white/10 rounded-3xl max-w-md w-full p-6 shadow-2xl space-y-4">
+      <div class="flex items-center justify-between border-b border-white/10 pb-3">
+        <h3 class="font-bold text-lg text-rally-yellow">Upload Custom Emoji</h3>
+        <button onclick="closeEmojiUploadModal()" class="text-rally-textMuted hover:text-white"><i class="fa-solid fa-xmark text-lg"></i></button>
+      </div>
+
+      <div class="space-y-3">
+        <div>
+          <label class="block text-xs font-bold text-rally-textMuted uppercase mb-1">Emoji / Sticker Image File</label>
+          <input type="file" id="custom-emoji-file-input" class="text-xs text-rally-textMuted w-full" accept="image/*">
+        </div>
+      </div>
+
+      <div class="flex justify-end space-x-3 pt-2">
+        <button onclick="closeEmojiUploadModal()" class="px-4 py-2 text-xs font-semibold text-rally-textMuted hover:text-white">Cancel</button>
+        <button onclick="saveCustomEmojiFile()" class="px-5 py-2 text-xs font-bold bg-rally-yellow text-rally-bgDark rounded-xl hover:bg-rally-yellowHover shadow">Upload</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Alert Modal -->
+  <div id="alert-modal" class="hidden fixed inset-0 z-50 modal-backdrop flex items-center justify-center p-4">
+    <div class="bg-rally-panelDark border border-white/10 rounded-3xl max-w-sm w-full p-6 shadow-2xl space-y-4 text-center">
+      <h3 id="alert-title" class="font-bold text-lg text-white">Notice</h3>
+      <p id="alert-msg" class="text-xs text-rally-textMuted leading-relaxed"></p>
+      <button onclick="closeAlertModal()" class="w-full py-2.5 text-xs font-bold bg-rally-yellow text-rally-bgDark rounded-xl hover:bg-rally-yellowHover shadow">Close</button>
+    </div>
+  </div>
+
+  <!-- ========================================== -->
+  <!-- JAVASCRIPT LOGIC                           -->
+  <!-- ========================================== -->
+  <script>
+    // System State
+    let currentUser = {
+      name: "Your Name",
+      status: "online",
+      avatar: "data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='%23121214'><path d='M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm0 3c1.66 0 3 1.34 3 3s-1.34 3-3 3-3-1.34-3-3 1.34-3 3-3zm0 14.2c-2.5 0-4.71-1.28-6-3.22.03-1.99 4-3.08 6-3.08 1.99 0 5.97 1.09 6 3.08-1.29 1.94-3.5 3.22-6 3.22z'/></svg>",
+      isMuted: false,
+      isDeafened: false
+    };
+
+    let currentScreenStream = null;
+
+    // Emoji Catalog Database
+    const emojiCatalog = {
+      smileys: ['😀','😃','😄','😁','😆','😅','😂','🤣','🥲','😊','😇','🙂','🙃','😉','😌','😍','🥰','😘','😗','😙','😚','😋','😛','😝','😜','🤪','🤨','🧐','🤓','😎','🥸','🤩','🥳'],
+      animals: ['🐶','🐱','🐭','🐹','🐰','🦊','🐻','🐼','🐻‍❄️','🐨','🐯','🦁','🐮','🐷','🐸','🐵','🐔','🐧','🐦','🐤','🦆','🦅','🦉','🦇','🐺','🐗','🐴','🦄','🐝','🪲','🐛','🦋'],
+      food: ['🍏','🍎','🍐','🍊','🍋','🍌','🍉','🍇','🍓','🫐','🍈','🍒','🍑','🥭','🍍','🥥','🥝','🍅','🥑','🍆','🥔','🥕','🌽','🌶️','🫑','🥒','🥬','🥦','🧄','🧅','🍄','🥜','🍕','🍔','🍟','🌭'],
+      objects: ['🚗','🏎️','🚓','🚑','🚒','🚐','🛻','🚚','🚛','🚜','🦯','🦽','🦼','🛵','🏍️','🛺','🚨','🚘','🚔','🚕','🚖','💻','🖥️','🖨️','🖱️','🧮','🎥','📺','📷','📹','📼','🔍'],
+      symbols: ['⚡','🔥','💥','✨','🌟','💫','💦','💨','🖤','❤️','🧡','💛','💚','💙','💜','🤎','🤍','💯','💢','💬','👁️‍🗨️','💤','💥','🎉','🎊','🎈','🎁','🏆','🥇','🥈','🥉']
+    };
+
+    // DOM Elements
+    const viewTextChat = document.getElementById('view-text-chat');
+    const viewVoiceChat = document.getElementById('view-voice-chat');
+    const channelBtns = document.querySelectorAll('.channel-btn');
+    const currentChannelTitle = document.getElementById('current-channel-title');
+    const currentChannelIcon = document.getElementById('current-channel-icon');
+    const chatForm = document.getElementById('chat-form');
+    const messageTextInput = document.getElementById('message-text-input');
+    const dynamicMessagesList = document.getElementById('dynamic-messages-list');
+    const emojiPickerBtn = document.getElementById('emoji-picker-btn');
+    const emojiPopover = document.getElementById('emoji-popover');
+    const emojiGrid = document.getElementById('emoji-grid');
+    const emojiSearchInput = document.getElementById('emoji-search-input');
+    const voiceConnectedBar = document.getElementById('voice-connected-bar');
+
+    window.onload = function() {
+      setupChannels();
+      setupChat();
+      setupEmojiPicker();
+      loadEmojis('smileys');
+    };
+
+    // 1. Channel Navigation
+    function setupChannels() {
+      channelBtns.forEach(btn => {
+        btn.addEventListener('click', () => {
+          channelBtns.forEach(b => {
+            b.classList.remove('active', 'bg-white/10', 'text-white');
+            b.classList.add('text-rally-textMuted');
+          });
+
+          btn.classList.add('active', 'bg-white/10', 'text-white');
+          btn.classList.remove('text-rally-textMuted');
+
+          const type = btn.getAttribute('data-channel-type');
+          const name = btn.getAttribute('data-channel-name');
+
+          currentChannelTitle.textContent = name;
+          document.querySelectorAll('.channel-title-text').forEach(el => el.textContent = name);
+
+          if (type === 'text') {
+            currentChannelIcon.textContent = '#';
+            viewTextChat.classList.remove('hidden');
+            viewVoiceChat.classList.add('hidden');
+          } else if (type === 'voice') {
+            currentChannelIcon.textContent = '🔊';
+            viewTextChat.classList.add('hidden');
+            viewVoiceChat.classList.remove('hidden');
+            voiceConnectedBar.classList.remove('hidden');
+          }
+        });
+      });
+    }
+
+    // 2. Messaging Logic
+    function setupChat() {
+      chatForm.addEventListener('submit', (e) => {
+        e.preventDefault();
+        const text = messageTextInput.value.trim();
+        if (!text) return;
+
+        appendMessage(currentUser.name, text, currentUser.avatar);
+        messageTextInput.value = '';
+        emojiPopover.classList.add('hidden');
+      });
+    }
+
+    function appendMessage(senderName, text, avatarSrc, imageAttachment = null) {
+      const timeStr = new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+      const msgDiv = document.createElement('div');
+      msgDiv.className = "flex items-start space-x-4 group hover:bg-white/[0.02] -mx-6 px-6 py-1.5 transition";
+
+      let attachmentHTML = '';
+      if (imageAttachment) {
+        attachmentHTML = `<div class="mt-2 max-w-xs rounded-2xl overflow-hidden border border-white/10"><img src="${imageAttachment}" class="w-full h-auto"></div>`;
+      }
+
+      msgDiv.innerHTML = `
+        <div class="w-10 h-10 rounded-full bg-white flex items-center justify-center overflow-hidden shrink-0 border border-rally-yellow">
+          <img src="${avatarSrc}" class="w-full h-full object-cover">
+        </div>
+        <div class="flex-1 min-w-0">
+          <div class="flex items-baseline space-x-2">
+            <span class="font-bold text-sm text-white">${escapeHTML(senderName)}</span>
+            <span class="text-[11px] text-rally-textMuted">Today at ${timeStr}</span>
+          </div>
+          <p class="text-sm text-gray-200 mt-1 leading-relaxed">${escapeHTML(text)}</p>
+          ${attachmentHTML}
+        </div>
+      `;
+
+      dynamicMessagesList.appendChild(msgDiv);
+      const container = document.getElementById('messages-container');
+      container.scrollTop = container.scrollHeight;
+    }
+
+    // 3. Emoji Picker & Custom Uploads
+    function setupEmojiPicker() {
+      emojiPickerBtn.addEventListener('click', (e) => {
+        e.stopPropagation();
+        emojiPopover.classList.toggle('hidden');
+      });
+
+      document.addEventListener('click', (e) => {
+        if (!emojiPopover.contains(e.target) && e.target !== emojiPickerBtn) {
+          emojiPopover.classList.add('hidden');
+        }
+      });
+
+      emojiSearchInput.addEventListener('input', (e) => {
+        const query = e.target.value.toLowerCase();
+        if (!query) {
+          loadEmojis('smileys');
+          return;
+        }
+        
+        let matches = [];
+        Object.values(emojiCatalog).forEach(cat => {
+          cat.forEach(item => {
+            if (item.includes(query)) matches.push(item);
+          });
+        });
+        renderEmojiGrid(matches);
+      });
+    }
+
+    function filterEmojiCategory(category) {
+      if (emojiCatalog[category]) {
+        loadEmojis(category);
+      }
+    }
+
+    function loadEmojis(category) {
+      renderEmojiGrid(emojiCatalog[category]);
+    }
+
+    function renderEmojiGrid(emojiArray) {
+      emojiGrid.innerHTML = '';
+      emojiArray.forEach(emoji => {
+        const btn = document.createElement('button');
+        btn.type = 'button';
+        btn.className = 'hover:scale-125 transition p-1 rounded hover:bg-white/5';
+        btn.textContent = emoji;
+        btn.onclick = () => {
+          messageTextInput.value += emoji;
+          messageTextInput.focus();
+        };
+        emojiGrid.appendChild(btn);
+      });
+    }
+
+    // 4. Custom File & Profile Controls
+    function triggerFileUpload() {
+      const fileInput = document.getElementById('file-attachment-input');
+      fileInput.click();
+      fileInput.onchange = function() {
+        if (fileInput.files && fileInput.files[0]) {
+          const reader = new FileReader();
+          reader.onload = function(e) {
+            appendMessage(currentUser.name, 'Attached image:', currentUser.avatar, e.target.result);
+          };
+          reader.readAsDataURL(fileInput.files[0]);
+        }
+      };
+    }
+
+    function openProfileModal() { document.getElementById('edit-profile-modal').classList.remove('hidden'); }
+    function closeProfileModal() { document.getElementById('edit-profile-modal').classList.add('hidden'); }
+
+    function saveProfileChanges() {
+      const newName = document.getElementById('edit-name-input').value.trim();
+      const fileInput = document.getElementById('edit-avatar-file');
+
+      if (newName) {
+        currentUser.name = newName;
+        document.getElementById('user-display-name').textContent = newName;
+        document.getElementById('user-voice-name').textContent = newName;
+      }
+
+      if (fileInput.files && fileInput.files[0]) {
+        const reader = new FileReader();
+        reader.onload = function(e) {
+          currentUser.avatar = e.target.result;
+          document.getElementById('user-avatar-img').src = e.target.result;
+          document.getElementById('user-voice-avatar-img').src = e.target.result;
+        };
+        reader.readAsDataURL(fileInput.files[0]);
+      }
+
+      closeProfileModal();
+    }
+
+    function toggleUserStatus() {
+      const dot = document.getElementById('status-dot');
+      const text = document.getElementById('status-text');
+      if (currentUser.status === 'online') {
+        currentUser.status = 'away';
+        dot.className = 'w-2 h-2 rounded-full bg-amber-400';
+        text.textContent = 'Away';
+      } else {
+        currentUser.status = 'online';
+        dot.className = 'w-2 h-2 rounded-full bg-rally-accentGreen';
+        text.textContent = 'Online';
+      }
+    }
+
+    function openEmojiUploadModal() { document.getElementById('upload-emoji-modal').classList.remove('hidden'); }
+    function closeEmojiUploadModal() { document.getElementById('upload-emoji-modal').classList.add('hidden'); }
+
+    function saveCustomEmojiFile() {
+      const fileInput = document.getElementById('custom-emoji-file-input');
+      if (fileInput.files && fileInput.files[0]) {
+        const reader = new FileReader();
+        reader.onload = function(e) {
+          appendMessage(currentUser.name, 'Uploaded custom sticker:', currentUser.avatar, e.target.result);
+        };
+        reader.readAsDataURL(fileInput.files[0]);
+      }
+      closeEmojiUploadModal();
+      emojiPopover.classList.add('hidden');
+    }
+
+    // 5. Voice Room & Screen Sharing
+    async function startScreenShare() {
+      const preview = document.getElementById('screen-share-preview');
+      const videoElem = document.getElementById('screen-share-video');
+      const placeholder = document.getElementById('screen-share-placeholder');
+
+      try {
+        if (navigator.mediaDevices && navigator.mediaDevices.getDisplayMedia) {
+          currentScreenStream = await navigator.mediaDevices.getDisplayMedia({ video: true });
+          videoElem.srcObject = currentScreenStream;
+          videoElem.classList.remove('hidden');
+          placeholder.classList.add('hidden');
+          preview.classList.remove('hidden');
+
+          currentScreenStream.getVideoTracks()[0].onended = () => {
+            stopScreenShare();
+          };
+        } else {
+          // Fallback simulation
+          preview.classList.remove('hidden');
+          videoElem.classList.add('hidden');
+          placeholder.classList.remove('hidden');
+        }
+      } catch (err) {
+        console.log('Screen share cancelled or not allowed');
+      }
+    }
+
+    function stopScreenShare() {
+      if (currentScreenStream) {
+        currentScreenStream.getTracks().forEach(track => track.stop());
+        currentScreenStream = null;
+      }
+      document.getElementById('screen-share-preview').classList.add('hidden');
+    }
+
+    function toggleMute() {
+      currentUser.isMuted = !currentUser.isMuted;
+      const micIcon = document.getElementById('mic-icon');
+      const speakingIndicator = document.getElementById('speaking-indicator');
+      const avatarRing = document.getElementById('user-voice-avatar-ring');
+
+      if (currentUser.isMuted) {
+        micIcon.className = 'fa-solid fa-microphone-slash text-red-400';
+        speakingIndicator.textContent = 'Muted';
+        speakingIndicator.className = 'text-xs text-red-400 font-semibold';
+        avatarRing.classList.remove('speaking-ring');
+      } else {
+        micIcon.className = 'fa-solid fa-microphone';
+        speakingIndicator.textContent = 'Connected';
+        speakingIndicator.className = 'text-xs text-rally-accentGreen font-semibold';
+        avatarRing.classList.add('speaking-ring');
+      }
+    }
+
+    function toggleDeafen() {
+      currentUser.isDeafened = !currentUser.isDeafened;
+      const deafenIcon = document.getElementById('deafen-icon');
+      deafenIcon.className = currentUser.isDeafened ? 'fa-solid fa-ear-deafen text-red-400' : 'fa-solid fa-headphones';
+    }
+
+    function leaveVoiceChannel() {
+      stopScreenShare();
+      voiceConnectedBar.classList.add('hidden');
+      document.querySelector('[data-channel-name="general"]').click();
+    }
+
+    function openAlertModal(title, msg) {
+      document.getElementById('alert-title').textContent = title;
+      document.getElementById('alert-msg').textContent = msg;
+      document.getElementById('alert-modal').classList.remove('hidden');
+    }
+
+    function closeAlertModal() {
+      document.getElementById('alert-modal').classList.add('hidden');
+    }
+
+    function escapeHTML(str) {
+      return str.replace(/[&<>'"]/g, 
+        tag => ({
+          '&': '&amp;',
+          '<': '&lt;',
+          '>': '&gt;',
+          "'": '&#39;',
+          '"': '&quot;'
+        }[tag] || tag)
+      );
+    }
+  </script>
+</body>
+</html>
